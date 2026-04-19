@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools.Topic | Technical Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-dark: #0f172a;
+            --navy-light: #1e293b;
+            --cyan-accent: #22d3ee;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--navy-dark);
+            color: #e2e8f0;
+            scroll-behavior: smooth;
+        }
+        .code-font { font-family: 'Fira Code', monospace; }
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sticky-toc {
+            height: calc(100vh - 4rem);
+        }
+        .tab-active {
+            border-bottom: 2px solid var(--cyan-accent);
+            color: var(--cyan-accent);
+        }
+        pre {
+            background: #020617 !important;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .flow-step {
+            transition: all 0.3s ease;
+        }
+        .flow-active {
+            border-color: var(--cyan-accent) !important;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+            transform: scale(1.02);
+        }
+        .arch-node:hover {
+            fill: #334155;
+            cursor: pointer;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--navy-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* AI Modal Styles */
+        .ai-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .ai-modal.active { display: flex; }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .sparkle-icon { animation: sparkle 2s infinite; }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- AI Architecture Assistant Floating Button -->
+    <button onclick="toggleAiChat()" class="fixed bottom-8 right-8 z-[60] bg-cyan-500 hover:bg-cyan-400 text-navy-dark font-bold py-3 px-6 rounded-full shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+        <span class="sparkle-icon">✨</span> Ask Architecture AI
+    </button>
+
+    <!-- Header -->
+    <header class="h-16 border-b border-slate-800 glass fixed top-0 w-full z-50 px-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center font-bold text-navy-dark">T</div>
+            <h1 class="text-xl font-bold tracking-tight">Tools.Topic <span class="text-cyan-400 text-sm font-normal ml-2">v1.0.0</span></h1>
+        </div>
+        <div class="flex items-center gap-4 text-sm text-slate-400">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Production Ready</span>
+            <a href="https://dev.azure.com/DprGroupLtd/Tools/Tools.Topic" class="hover:text-cyan-400">Azure DevOps Repository</a>
+        </div>
+    </header>
+
+    <div class="flex pt-16">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 sticky-toc fixed left-0 overflow-y-auto border-r border-slate-800 p-6 hidden lg:block">
+            <ul class="space-y-4">
+                <li><a href="#dna" class="text-slate-400 hover:text-cyan-400 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Project DNA</a></li>
+                <li><a href="#architecture" class="text-slate-400 hover:text-cyan-400 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> System Architecture</a></li>
+                <li><a href="#logic" class="text-slate-400 hover:text-cyan-400 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Key Logic Flows</a></li>
+                <li><a href="#tools" class="text-slate-400 hover:text-cyan-400 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg> Tool Explorer</a></li>
+                <li><a href="#quickstart" class="text-slate-400 hover:text-cyan-400 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Quickstart</a></li>
+            </ul>
+
+            <div class="mt-12 p-4 rounded-lg bg-slate-900 border border-slate-800">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sync Simulator</h4>
+                <div class="space-y-3">
+                    <label class="text-[10px] text-slate-400 uppercase">Repo Count</label>
+                    <input type="range" id="repoSlider" min="1" max="50" value="30" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                    <div class="flex justify-between text-xs">
+                        <span id="repoValue">30 Repos</span>
+                        <span id="timeValue" class="text-cyan-400 font-bold">150s Est.</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="simProgress" class="bg-cyan-500 h-full w-0 transition-all duration-1000"></div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-64 p-6 lg:p-12">
+            <!-- Project DNA -->
+            <section id="dna" class="mb-20">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-cyan-400">01.</span> Project DNA
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div class="p-6 rounded-xl bg-slate-900 border border-slate-800">
+                            <h3 class="text-lg font-semibold mb-2">The Purpose</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed">
+                                An AI-powered knowledge-base agent for researching Azure DevOps work items and source code. It solves the disconnection between ticketing systems and local repositories by creating a unified context window for LLMs.
+                            </p>
+                        </div>
+                        <div class="p-6 rounded-xl bg-slate-900 border border-slate-800">
+                            <h3 class="text-lg font-semibold mb-2">Tech Stack</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 bg-blue-900/30 text-blue-400 text-xs rounded border border-blue-800">Node.js v22+</span>
+                                <span class="px-2 py-1 bg-blue-900/30 text-blue-300 text-xs rounded border border-blue-800">TypeScript 5.7.3</span>
+                                <span class="px-2 py-1 bg-cyan-900/30 text-cyan-400 text-xs rounded border border-cyan-800">MCP SDK 1.0.4</span>
+                                <span class="px-2 py-1 bg-purple-900/30 text-purple-400 text-xs rounded border border-purple-800">Azure DevOps API</span>
+                                <span class="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded border border-slate-700">Git / Ripgrep</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 rounded-xl bg-slate-900 border border-slate-800 relative overflow-hidden">
+                        <h3 class="text-lg font-semibold mb-4">Core Capabilities</h3>
+                        <ul class="space-y-3 text-sm text-slate-400">
+                            <li class="flex items-start gap-2">
+                                <svg class="text-cyan-400 mt-1 shrink-0" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span><b>Unified Context:</b> Correlate tickets, wikis, and 30+ repositories.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <svg class="text-cyan-400 mt-1 shrink-0" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span><b>Local Knowledge:</b> Shallow clones for instant local ripgrep search.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <svg class="text-cyan-400 mt-1 shrink-0" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span><b>Dual Agent Support:</b> Native compatibility with Gemini CLI and Claude Code.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <svg class="text-cyan-400 mt-1 shrink-0" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span><b>Background Sync:</b> Non-blocking async updates for large scale clones.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture" class="mb-20">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-cyan-400">02.</span> System Architecture
+                </h2>
+                <p class="text-slate-400 mb-8">Click a component in the diagram to view technical implementation details.</p>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="xl:col-span-2 p-8 rounded-xl bg-slate-900 border border-slate-800 flex justify-center">
+                        <svg viewBox="0 0 800 500" class="w-full max-w-2xl h-auto">
+                            <defs>
+                                <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+                                </pattern>
+                            </defs>
+                            <rect width="800" height="500" fill="url(#smallGrid)" />
+
+                            <g id="layer-ai" class="arch-node group" onclick="showArchInfo('ai')">
+                                <rect x="200" y="20" width="400" height="80" rx="10" fill="#1e293b" stroke="#334155" stroke-width="2" />
+                                <text x="400" y="55" text-anchor="middle" fill="#fff" font-weight="bold" font-size="16">AI Agent Layer</text>
+                                <text x="400" y="80" text-anchor="middle" fill="#94a3b8" font-size="12">Gemini CLI / Claude Code</text>
+                            </g>
+
+                            <line x1="400" y1="100" x2="400" y2="150" stroke="#22d3ee" stroke-width="2" stroke-dasharray="5,5" />
+                            <text x="410" y="130" fill="#22d3ee" font-size="10" font-family="monospace">MCP Protocol</text>
+
+                            <g id="layer-mcp" class="arch-node" onclick="showArchInfo('mcp')">
+                                <rect x="150" y="150" width="500" height="160" rx="10" fill="#1e293b" stroke="#22d3ee" stroke-width="2" />
+                                <text x="400" y="185" text-anchor="middle" fill="#fff" font-weight="bold" font-size="16">MCP Server Layer</text>
+                                <rect x="175" y="205" width="220" height="80" rx="5" fill="#0f172a" stroke="#334155" />
+                                <text x="285" y="235" text-anchor="middle" fill="#22d3ee" font-size="12">Repo Manager Server</text>
+                                <rect x="405" y="205" width="220" height="80" rx="5" fill="#0f172a" stroke="#334155" />
+                                <text x="515" y="235" text-anchor="middle" fill="#94a3b8" font-size="12">Azure DevOps MCP</text>
+                            </g>
+
+                            <line x1="300" y1="310" x2="300" y2="380" stroke="#334155" stroke-width="2" />
+                            <line x1="500" y1="310" x2="500" y2="380" stroke="#334155" stroke-width="2" />
+
+                            <g id="layer-ext" class="arch-node" onclick="showArchInfo('ext')">
+                                <rect x="420" y="380" width="230" height="100" rx="10" fill="#1e293b" stroke="#334155" stroke-width="2" />
+                                <text x="535" y="415" text-anchor="middle" fill="#fff" font-weight="bold" font-size="14">Azure DevOps</text>
+                                <text x="535" y="440" text-anchor="middle" fill="#94a3b8" font-size="11">Work Items, Git, Wiki</text>
+                            </g>
+
+                            <g id="layer-storage" class="arch-node" onclick="showArchInfo('storage')">
+                                <rect x="150" y="380" width="230" height="100" rx="10" fill="#1e293b" stroke="#334155" stroke-width="2" />
+                                <text x="265" y="415" text-anchor="middle" fill="#fff" font-weight="bold" font-size="14">Local Storage Layer</text>
+                                <text x="265" y="440" text-anchor="middle" fill="#94a3b8" font-size="11">.source/, .wikis/, .work-items/</text>
+                            </g>
+                        </svg>
+                    </div>
+                    <div id="archDetailsPanel" class="p-6 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-center">
+                        <div id="archDefault">
+                            <h3 class="text-xl font-bold mb-4 text-cyan-400">Interactive Diagram</h3>
+                            <p class="text-slate-400 text-sm">Select a layer to see how Tools.Topic coordinates AI instructions with underlying developer services.</p>
+                        </div>
+                        <div id="archContent" class="hidden animate-in fade-in duration-300">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logic Flows -->
+            <section id="logic" class="mb-20">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-cyan-400">03.</span> Key Logic Flows
+                </h2>
+
+                <div class="mb-12">
+                    <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
+                        Research Flow: /topic-work-item
+                    </h3>
+                    <div class="space-y-4 max-w-4xl">
+                        <div id="step-1" class="flow-step p-4 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-cyan-900 text-cyan-400 flex items-center justify-center font-bold">1</span>
+                            <div>
+                                <h4 class="font-semibold text-sm">Context Retrieval</h4>
+                                <p class="text-xs text-slate-500">Call Azure DevOps MCP to fetch work item metadata (description, acceptance criteria, comments).</p>
+                            </div>
+                        </div>
+                        <div id="step-2" class="flow-step p-4 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold">2</span>
+                            <div>
+                                <h4 class="font-semibold text-sm">Keyword Extraction</h4>
+                                <p class="text-xs text-slate-500">AI extracts technical keywords (e.g., class names, error codes) to form codebase search queries.</p>
+                            </div>
+                        </div>
+                        <div id="step-3" class="flow-step p-4 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold">3</span>
+                            <div>
+                                <h4 class="font-semibold text-sm">Multi-Repo Ripgrep</h4>
+                                <p class="text-xs text-slate-500">Search tool executes parallel ripgrep across 30+ cloned repos in .source/.</p>
+                            </div>
+                        </div>
+                        <div id="step-4" class="flow-step p-4 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold">4</span>
+                            <div>
+                                <h4 class="font-semibold text-sm">Technical Deep-Dive</h4>
+                                <p class="text-xs text-slate-500">AI reads specific code snippets, correlates with wiki docs, and generates the final analysis.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="animateFlow()" class="mt-6 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold rounded-lg transition-colors">Replay Sequence</button>
+                </div>
+            </section>
+
+            <!-- Tool Explorer -->
+            <section id="tools" class="mb-20">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-cyan-400">04.</span> Tool Explorer
+                </h2>
+
+                <div class="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
+                    <div class="flex border-b border-slate-800 overflow-x-auto bg-slate-900/50" id="toolTabs">
+                        <!-- Tabs via JS -->
+                    </div>
+                    <div id="toolDetail" class="p-8 min-h-[400px]">
+                        <!-- Content via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quickstart -->
+            <section id="quickstart" class="mb-20">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-cyan-400">05.</span> Developer Quickstart
+                </h2>
+
+                <div class="space-y-8">
+                    <div class="p-8 rounded-xl bg-slate-900 border border-slate-800">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-xl font-semibold">1. Prerequisites & Environment</h3>
+                            <button onclick="openSmartSetup()" class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-xs rounded-full hover:bg-cyan-500/20 transition-all">
+                                ✨ Smart Setup Assistant
+                            </button>
+                        </div>
+                        <pre class="code-font text-sm"><code># Install Node.js v22+ and build-essential for ripgrep support
+$env:AZURE_DEVOPS_EXT_PAT = "your_pat_here"
+
+# Build the MCP server
+cd mcp-server
+npm install
+npm run build</code></pre>
+                    </div>
+
+                    <div class="p-8 rounded-xl bg-slate-900 border border-slate-800">
+                        <h3 class="text-xl font-semibold mb-6">2. Repository Strategy</h3>
+                        <p class="text-slate-400 text-sm mb-4">Modify <code class="text-cyan-400">.gemini/settings.json</code> to configure the sync scope:</p>
+                        <pre class="code-font text-sm"><code>{
+  "repositories": {
+    "azureDevOpsOrg": "DprGroupLtd",
+    "includedRepos": ["Tools.Topic", "DPR.Platform", "Core.Library"],
+    "includedWikis": ["Product.Guide"]
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="p-8 rounded-xl bg-slate-900 border border-slate-800">
+                        <h3 class="text-xl font-semibold mb-6">3. Workflow Entry Points</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 rounded bg-slate-800 border border-slate-700">
+                                <h4 class="text-cyan-400 font-bold text-sm mb-1">/topic-begin</h4>
+                                <p class="text-xs text-slate-400">Full environment check and initial shallow clone of all configured resources.</p>
+                            </div>
+                            <div class="p-4 rounded bg-slate-800 border border-slate-700">
+                                <h4 class="text-cyan-400 font-bold text-sm mb-1">/topic-sync-status</h4>
+                                <p class="text-xs text-slate-400">Poll the background process to see clone/pull progress across all 30+ repos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="mt-20 pt-8 border-t border-slate-800 text-slate-500 text-sm flex justify-between">
+                <div>&copy; 2025 Finova Engineering - Tools.Topic Documentation</div>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-cyan-400">Internal Wiki</a>
+                    <a href="#" class="hover:text-cyan-400">Azure DevOps</a>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- AI Modals -->
+    <div id="aiChatModal" class="ai-modal">
+        <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col m-4 h-[80vh]">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 class="font-bold flex items-center gap-2">✨ Architecture AI Assistant</h3>
+                <button onclick="toggleAiChat()" class="text-slate-500 hover:text-white">&times;</button>
+            </div>
+            <div id="aiChatHistory" class="flex-1 overflow-y-auto p-6 space-y-4 text-sm scroll-smooth">
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    Hello! I'm trained on the Tools.Topic system architecture. Ask me anything about the MCP server, repository management, or Azure DevOps integrations.
+                </div>
+            </div>
+            <div id="aiLoading" class="hidden px-6 py-2">
+                <div class="flex gap-2 items-center text-cyan-400 text-xs italic">
+                    <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    Thinking...
+                </div>
+            </div>
+            <div class="p-4 bg-slate-950 flex gap-2">
+                <input type="text" id="aiInput" placeholder="How does the async sync work?" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white">
+                <button onclick="sendAiMessage()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg text-sm transition-all">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolExplainModal" class="ai-modal">
+        <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 m-4">
+            <h3 id="explainTitle" class="text-xl font-bold text-cyan-400 mb-2">✨ Explaining Tool...</h3>
+            <div id="explainContent" class="text-sm text-slate-300 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
+                Loading AI-generated analysis...
+            </div>
+            <button onclick="closeToolExplain()" class="mt-6 w-full py-2 bg-slate-800 rounded-lg text-sm hover:bg-slate-700 transition-all">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Gemini API Configuration ---
+        const apiKey = ""; // Environment provided
+        const model = "gemini-2.5-flash-preview-09-2025";
+
+        async function callGemini(prompt, systemPrompt = "You are a senior technical architect for the Tools.Topic project.") {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "No response received.";
+                } catch (error) {
+                    if (i === 4) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // --- AI Architecture Assistant ---
+        function toggleAiChat() {
+            document.getElementById('aiChatModal').classList.toggle('active');
+        }
+
+        async function sendAiMessage() {
+            const input = document.getElementById('aiInput');
+            const history = document.getElementById('aiChatHistory');
+            const loading = document.getElementById('aiLoading');
+            const query = input.value.trim();
+            if (!query) return;
+
+            input.value = '';
+            history.innerHTML += `<div class="bg-slate-700/30 p-4 rounded-xl text-right ml-12"><strong>You:</strong> ${query}</div>`;
+            loading.classList.remove('hidden');
+            history.scrollTop = history.scrollHeight;
+
+            try {
+                const docContext = document.body.innerText.substring(0, 10000); // Send first 10k chars as context
+                const response = await callGemini(
+                    `Context: ${docContext}\n\nUser Question: ${query}`,
+                    "You are the Tools.Topic Architecture Assistant. Use the provided context to answer questions clearly. If you don't know, say so. Keep answers technical and professional."
+                );
+                history.innerHTML += `<div class="bg-cyan-900/20 p-4 rounded-xl border border-cyan-800/30 mr-12"><strong>AI Assistant:</strong> ${response}</div>`;
+            } catch (err) {
+                history.innerHTML += `<div class="bg-red-900/20 p-4 rounded-xl text-red-400">Error: Could not reach AI assistant. Please try again.</div>`;
+            } finally {
+                loading.classList.add('hidden');
+                history.scrollTop = history.scrollHeight;
+            }
+        }
+
+        // --- Tool Explainer ---
+        async function explainTool(toolName, desc) {
+            const modal = document.getElementById('toolExplainModal');
+            const content = document.getElementById('explainContent');
+            const title = document.getElementById('explainTitle');
+
+            title.innerText = `✨ Deep Dive: ${toolName}`;
+            content.innerHTML = `<div class="animate-pulse">Consulting the knowledge base...</div>`;
+            modal.classList.add('active');
+
+            try {
+                const response = await callGemini(
+                    `Explain the MCP tool "${toolName}". Description: ${desc}. Detail how a developer should use it, potential pitfalls, and how it fits into the larger Tools.Topic architecture.`,
+                    "You are a Senior Technical Documentation expert for Finova. Provide a structured deep-dive into the requested tool."
+                );
+                content.innerText = response;
+            } catch (err) {
+                content.innerHTML = `<span class="text-red-400">Failed to generate explanation. Check your network or API key.</span>`;
+            }
+        }
+
+        function closeToolExplain() {
+            document.getElementById('toolExplainModal').classList.remove('active');
+        }
+
+        // --- Smart Setup Assistant ---
+        async function openSmartSetup() {
+            const shell = prompt("Which shell are you using? (powershell/bash/zsh)", "powershell");
+            const repos = prompt("List specific repos to include (comma separated) or type 'all'", "Tools.Topic, DPR.Platform");
+
+            const history = document.getElementById('aiChatHistory');
+            toggleAiChat();
+
+            history.innerHTML += `<div class="bg-slate-700/30 p-4 rounded-xl text-right ml-12 italic">System: Generating custom setup script for ${shell} including [${repos}]...</div>`;
+            const loading = document.getElementById('aiLoading');
+            loading.classList.remove('hidden');
+
+            try {
+                const response = await callGemini(
+                    `Generate a production-ready setup script for the Tools.Topic project. Shell: ${shell}. Repositories to include: ${repos}. Include PAT validation and build steps.`,
+                    "You are a DevOps automation expert. Provide only the shell script and a brief instruction."
+                );
+                history.innerHTML += `<div class="bg-cyan-900/20 p-4 rounded-xl border border-cyan-800/30 mr-12 font-mono text-[11px] whitespace-pre-wrap"><strong>✨ Custom Script Generated:</strong>\n\n${response}</div>`;
+            } catch (err) {
+                history.innerHTML += `<div class="bg-red-900/20 p-4 rounded-xl text-red-400">Failed to generate script.</div>`;
+            } finally {
+                loading.classList.add('hidden');
+                history.scrollTop = history.scrollHeight;
+            }
+        }
+
+        // --- Core Application Logic ---
+        const archData = {
+            ai: { title: "AI Agent Layer", desc: "The interface for developers. Supports dual personalities.", tech: "Uses MCP clients.", features: ["Context Injection", "Custom Commands"] },
+            mcp: { title: "MCP Server Layer", desc: "The orchestration engine.", tech: "Node.js + MCP SDK.", features: ["Tool Handlers", "Async Scheduling"] },
+            ext: { title: "Azure DevOps", desc: "Source of truth for work items and git.", tech: "REST API v7.0.", features: ["Work Item Tracking", "Git Hosting"] },
+            storage: { title: "Local Storage Layer", desc: "Ephemeral cache of codebase.", tech: "Shallow clones.", features: ["Ripgrep index", "Sync tracking"] }
+        };
+
+        function showArchInfo(layer) {
+            const content = archData[layer];
+            const panel = document.getElementById('archContent');
+            const def = document.getElementById('archDefault');
+            def.classList.add('hidden');
+            panel.classList.remove('hidden');
+            panel.innerHTML = `
+                <h3 class="text-xl font-bold mb-2 text-cyan-400">${content.title}</h3>
+                <p class="text-slate-300 text-sm mb-4 italic">${content.desc}</p>
+                <div class="space-y-4">
+                    <div class="p-3 bg-slate-800 rounded border-l-4 border-cyan-500 text-xs text-slate-400"><strong>Tech:</strong> ${content.tech}</div>
+                    <ul class="text-xs space-y-2">${content.features.map(f => `<li class="flex items-center gap-2"><div class="w-1 h-1 bg-cyan-400 rounded-full"></div>${f}</li>`).join('')}</ul>
+                    <button onclick="toggleAiChat()" class="mt-4 w-full py-2 bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[10px] rounded hover:bg-cyan-500/20 transition-all">✨ Ask AI about ${content.title}</button>
+                </div>`;
+        }
+
+        const toolCategories = [
+            { id: 'env', name: 'Environment', tools: [{ name: 'check_env_vars', desc: 'Validates PAT presence.', params: 'vars: string[]' }] },
+            { id: 'sync', name: 'Sync', tools: [{ name: 'sync_all_async', desc: 'Triggers background clone.', params: 'force: boolean' }, { name: 'get_sync_status', desc: 'Checks .sync-status.json.', params: 'none' }] },
+            { id: 'repo', name: 'Repos', tools: [{ name: 'list_repositories', desc: 'Returns all repos.', params: 'none' }] },
+            { id: 'code', name: 'Code', tools: [{ name: 'search_codebase', desc: 'Runs ripgrep across .source/.', params: 'query: string' }, { name: 'read_code_snippet', desc: 'Reads specific file lines.', params: 'path: string, lines: range' }] },
+            { id: 'git', name: 'Git', tools: [{ name: 'create_branch', desc: 'Creates and pushes branch.', params: 'name: string' }] },
+            { id: 'build', name: 'Build', tools: [{ name: 'run_dotnet_build', desc: 'Spawns dotnet build.', params: 'path: string' }] }
+        ];
+
+        let activeCategory = 'env';
+        function renderToolTabs() {
+            const container = document.getElementById('toolTabs');
+            container.innerHTML = toolCategories.map(cat => `<button onclick="setActiveCategory('${cat.id}')" class="px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${activeCategory === cat.id ? 'tab-active bg-slate-800' : 'text-slate-500 hover:text-slate-300'}">${cat.name}</button>`).join('');
+            renderToolDetail();
+        }
+
+        function setActiveCategory(id) { activeCategory = id; renderToolTabs(); }
+
+        function renderToolDetail() {
+            const cat = toolCategories.find(c => c.id === activeCategory);
+            const container = document.getElementById('toolDetail');
+            container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cat.tools.map(tool => `
+                <div class="p-6 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500/50 transition-colors">
+                    <h4 class="text-cyan-400 font-bold mb-2 code-font">${tool.name}()</h4>
+                    <p class="text-sm text-slate-400 mb-4">${tool.desc}</p>
+                    <code class="text-xs bg-black/40 px-2 py-1 rounded text-cyan-300 block mb-4">${tool.params}</code>
+                    <div class="flex gap-2">
+                        <button onclick="explainTool('${tool.name}', '${tool.desc}')" class="flex-1 py-1 px-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] rounded hover:bg-cyan-500/20 transition-all">✨ Explain Tool</button>
+                    </div>
+                </div>`).join('')}</div>`;
+        }
+
+        function animateFlow() {
+            const steps = document.querySelectorAll('.flow-step');
+            steps.forEach(s => { s.classList.remove('flow-active'); s.querySelector('span').classList.replace('bg-cyan-500', 'bg-slate-800'); });
+            let i = 1;
+            const interval = setInterval(() => {
+                const step = document.getElementById(`step-${i}`);
+                if (!step) return clearInterval(interval);
+                step.classList.add('flow-active');
+                step.querySelector('span').classList.replace('bg-slate-800', 'bg-cyan-500');
+                if (i++ > 4) clearInterval(interval);
+            }, 1000);
+        }
+
+        const slider = document.getElementById('repoSlider');
+        slider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('repoValue').innerText = `${val} Repos`;
+            document.getElementById('timeValue').innerText = `${val * 5}s Est.`;
+            document.getElementById('simProgress').style.width = '100%';
+            document.getElementById('simProgress').style.transitionDuration = `${(val * 5)/10}s`;
+        });
+
+        window.onload = () => { renderToolTabs(); animateFlow(); document.getElementById('simProgress').style.width = '100%'; };
+        document.getElementById('aiInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendAiMessage(); });
+    </script>
+</body>
+</html>
